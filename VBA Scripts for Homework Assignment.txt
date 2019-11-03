@@ -1,0 +1,114 @@
+Sub Stock_Summary()
+
+'Activate worksheet loop
+Dim ws As Worksheet
+For Each ws In Worksheets
+ws.Activate
+    
+    'Start Stock Code
+'---------------------------------------------------------------------
+'Create Column Labels
+ws.Range("I1").Value = "Ticker"
+ws.Range("J1").Value = "Yearly Change"
+ws.Range("K1").Value = "Percent Change"
+ws.Range("L1").Value = "Total Stock Volume"
+ws.Range("O1").Value = "Ticker"
+ws.Range("P1").Value = "Value"
+ws.Range("N2").Value = "Greatest Percent Increase"
+ws.Range("N3").Value = "Greatest Percent Decrease"
+ws.Range("N4").Value = "Greatest Total Volume"
+
+
+'Data Compilation (Pull Values in to I:L)
+    'Initial variables for Ticker, Yearly Change, Percent Change, and Total Volume
+    Dim Ticker As String
+    Dim YearChange As Double
+    Dim PercentChange As Double
+    Dim TotalVolume As Double
+    Dim Start As Long
+    Dim RowCount As Long
+    Dim GreatestPercentIncrease As String
+    Dim GreatestPercentDecrease As String
+    Dim GreatestTotalVolume As String
+    Dim Change As Single
+    Dim z As Double
+    Dim c As Long
+    Dim r1 As Range
+    Dim r2 As Range
+    Dim RoundCountColor As Long
+    
+    YearChange = 0
+    c = 2
+    PercentChange = 0
+    TotalVolume = 0
+    Start = 2
+    RowCount = Cells(Rows.Count, "A").End(xlUp).Row
+    
+    
+    'Setup Summary Table (I:L)
+    Dim SummaryTableRow As Long
+    SummaryTableRow = 2
+    
+        For z = 2 To RowCount
+        
+            If ws.Cells(z + 1, 1).Value <> ws.Cells(z, 1).Value Then
+                Ticker = ws.Cells(z, 1).Value
+                YearChange = (ws.Cells(z, 6).Value - ws.Cells(Start, 3).Value)
+                    
+                    'Nested If to skip zero values
+                    If ws.Cells(Start, 3).Value = 0 Then
+                    PercentChange = 0
+                    
+                    Else: PercentChange = Round((YearChange / ws.Cells(Start, 3).Value), 2)
+                    End If
+                
+                'Go Home
+                TotalVolume = TotalVolume + ws.Cells(z, 7).Value
+                Start = z + 1
+                             
+            'Add Ticker to Summary for unique tickers
+                ws.Range("I" & SummaryTableRow).Value = Ticker
+            
+            'Yearly change and % change
+                ws.Range("J" & SummaryTableRow).Value = YearChange
+                ws.Range("K" & SummaryTableRow).Value = PercentChange
+            
+            'Totals the volume and adds to Summary Table
+                ws.Range("L" & SummaryTableRow).Value = TotalVolume
+                
+                'Reset Variables
+                SummaryTableRow = SummaryTableRow + 1
+                TotalVolume = 0
+                YearChange = 0
+            
+            
+            Else: TotalVolume = TotalVolume + ws.Cells(z, 7).Value
+            
+            End If
+
+Next z
+    
+ws.Range("P2").Value = WorksheetFunction.Max(Columns(11))
+ws.Range("P3").Value = WorksheetFunction.Min(Columns(11))
+ws.Range("P4").Value = WorksheetFunction.Max(Columns(12))
+
+Columns(11).NumberFormat = "0.00%"
+ws.Range("P2").NumberFormat = "0.00%"
+ws.Range("P3").NumberFormat = "0.00%"
+
+' returns one less because header row not a factor
+increase_number = WorksheetFunction.Match(WorksheetFunction.Max(ws.Range("K2:K" & RowCount)), ws.Range("K2:K" & RowCount), 0)
+decrease_number = WorksheetFunction.Match(WorksheetFunction.Min(ws.Range("K2:K" & RowCount)), ws.Range("K2:K" & RowCount), 0)
+volume_number = WorksheetFunction.Match(WorksheetFunction.Max(ws.Range("L2:L" & RowCount)), ws.Range("L2:L" & RowCount), 0)
+
+'final ticker symbol for  total, greatest % of increase and decrease, and average
+ws.Range("O2") = ws.Cells(increase_number + 1, 9)
+ws.Range("O3") = ws.Cells(decrease_number + 1, 9)
+ws.Range("O4") = ws.Cells(volume_number + 1, 9)
+
+
+'Next Worksheet Loop
+Next ws
+
+End Sub
+
